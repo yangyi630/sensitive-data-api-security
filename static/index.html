@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>安全防护仪表板</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+    <script>
+        window.API_BASE = 'http://127.0.0.1:8006';
+    </script>
+</head>
+<body>
+    <div class="dashboard-container">
+        <header class="dashboard-header">
+            <h1>敏感数据加密与接口安全防护</h1>
+            <div class="header-stats">
+                <div class="stat-item">
+                    <span class="stat-label">JWT 状态</span>
+                    <span class="stat-value" id="jwt-status">未登录</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">缓存状态</span>
+                    <span class="stat-value" id="cache-status">未知</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">攻击拦截</span>
+                    <span class="stat-value" id="attack-count">0</span>
+                </div>
+            </div>
+            <div id="login-section" class="login-section">
+                <button id="login-btn" class="btn-primary">登录/注册</button>
+            </div>
+        </header>
+
+        <!-- 登录模态框 -->
+        <div id="login-modal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>用户登录</h2>
+                    <span class="close">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <form id="login-form">
+                        <div class="form-group">
+                            <label for="username">用户名:</label>
+                            <input type="text" id="username" name="username" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="password">密码:</label>
+                            <input type="password" id="password" name="password" required>
+                        </div>
+                        <div class="form-buttons">
+                            <button type="submit" class="btn-primary">登录</button>
+                            <button type="button" id="register-btn" class="btn-secondary">注册</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <main class="dashboard-content">
+            <!-- 加密工坊 -->
+            <section class="dashboard-card">
+                <h2>🔐 加密工坊</h2>
+                <div class="encryption-workshop">
+                    <div class="workshop-input">
+                        <label for="plaintext">明文数据:</label>
+                        <input type="text" id="plaintext" placeholder="输入要加密的数据">
+                        <label for="field-type">字段类型:</label>
+                        <select id="field-type">
+                            <option value="phone">手机号</option>
+                            <option value="id_card">身份证</option>
+                            <option value="bank_card">银行卡</option>
+                            <option value="email">邮箱</option>
+                        </select>
+                        <div class="workshop-buttons">
+                            <button id="encrypt-btn" class="btn-primary">加密</button>
+                            <button id="decrypt-btn" class="btn-secondary">解密</button>
+                        </div>
+                    </div>
+                    <div class="workshop-output">
+                        <div class="output-section">
+                            <label>密文:</label>
+                            <textarea id="ciphertext" readonly></textarea>
+                        </div>
+                        <div class="output-section">
+                            <label>脱敏后:</label>
+                            <input type="text" id="masked-text" readonly>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 脱敏秀 -->
+            <section class="dashboard-card">
+                <h2>🤫 脱敏秀</h2>
+                <div class="desensitization-show">
+                    <button id="load-users" class="btn-primary">加载用户列表</button>
+                    <div id="users-container" class="users-grid">
+                        <!-- 用户卡片将在这里生成 -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- 攻击防御动画 -->
+            <section class="dashboard-card">
+                <h2>🛡️ 攻击防御动画</h2>
+                <div class="attack-defense">
+                    <div class="defense-section">
+                        <h3>重放攻击模拟</h3>
+                        <button id="simulate-replay" class="btn-primary">模拟攻击</button>
+                        <div id="replay-result" class="result-box"></div>
+                    </div>
+                    <div class="defense-section">
+                        <h3>限流演示</h3>
+                        <button id="simulate-rate-limit" class="btn-primary">连续请求</button>
+                        <div class="rate-limit-meter">
+                            <div id="rate-limit-progress" class="progress-bar"></div>
+                            <span id="rate-limit-count">0/100</span>
+                        </div>
+                        <div id="rate-limit-result" class="result-box"></div>
+                    </div>
+                    <div class="defense-section">
+                        <h3>CSRF 保护</h3>
+                        <button id="simulate-csrf" class="btn-primary">测试 CSRF</button>
+                        <div id="csrf-result" class="result-box"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 安全态势仪表 -->
+            <section class="dashboard-card">
+                <h2>📊 安全态势仪表</h2>
+                <div class="security-metrics">
+                    <div class="metric-item">
+                        <h3>拦截率</h3>
+                        <canvas id="intercept-chart"></canvas>
+                    </div>
+                    <div class="metric-item">
+                        <h3>活跃令牌</h3>
+                        <canvas id="token-chart"></canvas>
+                    </div>
+                    <div class="metric-item">
+                        <h3>JWT 倒计时</h3>
+                        <div id="jwt-countdown" class="metric-value">02:00</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 审计日志流 -->
+            <section class="dashboard-card">
+                <h2>📋 审计日志流</h2>
+                <div class="audit-logs">
+                    <div id="logs-container" class="logs-list">
+                        <!-- 日志将在这里生成 -->
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="dashboard-footer">
+            <p>© 2026 信息安全专业课设 - 敏感数据加密与接口安全防护</p>
+        </footer>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
