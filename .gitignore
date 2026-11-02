@@ -8,7 +8,10 @@ __pycache__/
 .vscode/
 dist/
 build/
+target/
+out/
 .env
+*.env
 .env.*
 !.env.example
 .DS_Store
